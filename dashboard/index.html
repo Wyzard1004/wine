@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#793446">
+  <meta name="description" content="Explore how principal component analysis changes k-nearest neighbours classification of the UCI Wine dataset.">
+  <title>Wine, in perspective — a PCA research dashboard</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="Wine in perspective home">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 38"><path d="M8 3h16l-1 11c-.4 4-3 6-7 6s-6.6-2-7-6L8 3Zm8 17v13m-6 1h12M9 11h14"/></svg></span>
+      <span>wine<span class="brand-light"> / in perspective</span></span>
+    </a>
+    <nav class="tabs" aria-label="Dashboard sections">
+      <button class="tab active" data-tab="overview" aria-current="page">Overview</button>
+      <button class="tab" data-tab="explore">Explore data</button>
+      <button class="tab" data-tab="methods">Methodology</button>
+    </nav>
+    <a class="header-link" href="../docs/report.html">Read the report <span aria-hidden="true">↗</span></a>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <div id="loading" class="state-box" role="status"><span class="loader" aria-hidden="true"></span>Opening the cellar of data…</div>
+    <div id="error" class="state-box error" role="alert" hidden><h1>We couldn’t load the analysis.</h1><p>Serve the repository with <code>python3 -m http.server 8000</code>, then open <code>http://localhost:8000/dashboard/</code>. Check that <code>results/analysis.json</code> exists.</p><button class="button" onclick="location.reload()">Try again</button></div>
+    <div id="app" hidden>
+      <section id="overview" class="tab-panel" aria-label="Overview">
+        <div class="hero">
+          <div><div class="eyebrow"><span class="small-dot"></span> THE WINE CLASSIFICATION STUDY</div><h1>The shape of wine.</h1><p class="hero-description">13 chemical features. Three cultivars. One question:<br class="desktop-break"> can fewer dimensions tell the same story?</p></div>
+          <div class="hero-aside"><span class="dataset-badge">UCI WINE DATASET <span>↗</span></span><p>Principal component analysis × k-nearest neighbours</p><a class="button button-outline" href="../data/wine.csv" download><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m-4-4 4 4 4-4M4 13v4h12v-4"/></svg> Download dataset</a></div>
+        </div>
+
+        <div class="metrics" aria-label="Dataset and model summary">
+          <article class="metric"><div class="metric-top">Wine samples <span aria-hidden="true">01</span></div><div class="metric-value" id="sample-count">—</div><p id="sample-note">Three distinct cultivars</p></article>
+          <article class="metric"><div class="metric-top">Chemical features <span aria-hidden="true">02</span></div><div class="metric-value" id="feature-count">—</div><p>Standardised before modelling</p></article>
+          <article class="metric"><div class="metric-top">Baseline accuracy <span class="pill">k = 5</span></div><div class="metric-value" id="baseline-accuracy">—</div><p>All original features · five-fold CV</p></article>
+          <article class="metric metric-highlight"><div class="metric-top">Best PCA accuracy <span class="metric-icon" aria-hidden="true">↗</span></div><div class="metric-value" id="best-accuracy">—</div><p id="best-note">Comparing principal components</p></article>
+        </div>
+
+        <div class="section-heading"><h2>A new perspective, measured.</h2><span class="muted">Same samples. Same folds. Same neighbours.</span></div>
+        <div class="main-grid">
+          <article class="panel performance-panel">
+            <div class="panel-heading"><div><div class="eyebrow">THE COMPARISON</div><h3>Accuracy vs. dimensions</h3></div><label class="select-label" for="k-select">Neighbours <select id="k-select" aria-label="Number of nearest neighbours"></select></label></div>
+            <div class="chart-legend"><span><i class="swatch wine"></i> PCA + k-NN</span><span><i class="swatch sage"></i> All features</span></div>
+            <div id="accuracy-chart" class="chart"></div>
+            <p class="chart-note" id="accuracy-note">Points show mean accuracy; whiskers show ±1 sample standard deviation.</p>
+            <div id="finding" class="finding"></div>
+          </article>
+
+          <article class="panel scatter-panel">
+            <div class="panel-heading"><div><div class="eyebrow">THE BIG PICTURE</div><h3>Wine, in two dimensions</h3></div><span class="mini-badge">PCA</span></div>
+            <div id="class-toggles" class="class-toggles" aria-label="Show cultivars in PCA projection"></div>
+            <div id="scatter-chart" class="chart"></div>
+            <p class="chart-note">Each dot is a wine sample. Hover or focus to inspect.<br>Full-data projection for exploration; not an evaluation split.</p>
+          </article>
+        </div>
+
+        <div class="secondary-grid">
+          <article class="panel"><div class="panel-heading"><div><div class="eyebrow">INFORMATION RETAINED</div><h3>A smaller feature space</h3></div></div><div id="variance-chart" class="chart variance-chart"></div><p class="chart-note">Cumulative variance from a descriptive PCA fit to all samples. Variance retained does not measure classification accuracy.</p></article>
+          <article class="panel"><div class="panel-heading"><div><div class="eyebrow">WHERE PREDICTIONS LAND</div><h3>Confusion matrix</h3></div><select id="model-select" aria-label="Confusion matrix model"></select></div><div id="confusion-matrix"></div><p class="chart-note">Out-of-fold predictions · rows are actual cultivars.<br>Each sample is predicted once by a model that did not train on it.</p></article>
+        </div>
+
+        <article class="panel results-panel"><div class="panel-heading"><div><div class="eyebrow">THE NUMBERS</div><h3>Every model, side by side</h3></div><a class="text-link" href="../results/model_comparison.csv" download>Export results <span aria-hidden="true">↓</span></a></div><div class="table-scroll" tabindex="0" role="region" aria-label="Model comparison results"><table><caption class="sr-only">Fixed k=5 five-fold cross-validation comparison</caption><thead><tr><th>Representation</th><th>Dimensions</th><th>Mean accuracy</th><th>Fold SD</th><th>Δ vs. baseline</th></tr></thead><tbody id="results-body"></tbody></table></div><p class="chart-note">Reference experiment: k = 5, uniform weights, Euclidean distance. Δ is in percentage points. Fold variation is not a confidence interval.</p></article>
+
+        <div class="research-note"><div class="note-icon" aria-hidden="true">i</div><div><strong>Small dataset. Useful evidence.</strong><p>These results describe 178 wines and one reproducible cross-validation split. Explore neighbour sensitivity and the nested evaluation in the methodology before drawing broader conclusions.</p></div><button class="text-link" data-go="methods">Explore the method <span aria-hidden="true">→</span></button></div>
+      </section>
+
+      <section id="explore" class="tab-panel" aria-label="Explore data" hidden>
+        <div class="hero compact"><div><div class="eyebrow">BEHIND EVERY POINT</div><h1>The ingredients of the study.</h1><p class="hero-description">Explore every wine sample and the chemistry that sets cultivars apart.</p></div><a class="button button-outline" href="../data/wine.csv" download>Download dataset ↓</a></div>
+        <div class="explore-grid"><article class="panel"><div class="panel-heading"><div><div class="eyebrow">CHEMICAL RELATIONSHIPS</div><h3>Choose your perspective</h3></div></div><div class="axis-controls"><label for="x-feature">Horizontal axis<select id="x-feature"></select></label><label for="y-feature">Vertical axis<select id="y-feature"></select></label></div><div id="feature-chart" class="chart"></div><p class="chart-note">Original feature values, before standardisation. Colours identify the three cultivars.</p></article><article class="panel feature-profile"><div class="eyebrow">FEATURE AT A GLANCE</div><h3 id="profile-name">—</h3><p class="muted">Summary across all wine samples</p><dl id="feature-profile"></dl><div class="class-breakdown" id="class-breakdown"></div></article></div>
+        <article class="panel"><div class="panel-heading"><div><div class="eyebrow">THE SOURCE DATA</div><h3>Sample explorer</h3></div><div class="data-controls"><label class="sr-only" for="sample-search">Search sample ID or cultivar</label><input id="sample-search" type="search" placeholder="Search sample ID or cultivar…"><label class="sr-only" for="class-filter">Filter cultivar</label><select id="class-filter"><option value="all">All cultivars</option></select></div></div><div class="table-scroll" tabindex="0" role="region" aria-label="Wine sample data"><table id="data-table"><caption class="sr-only">Wine samples, all 13 chemical features</caption><thead id="data-head"></thead><tbody id="data-body"></tbody></table></div><div class="pagination"><span id="page-status" role="status"></span><div><button class="button button-small button-outline" id="prev-page" aria-label="Previous samples">← Previous</button><button class="button button-small button-outline" id="next-page" aria-label="Next samples">Next →</button></div></div></article>
+      </section>
+
+      <section id="methods" class="tab-panel" aria-label="Methodology" hidden>
+        <div class="hero compact"><div><div class="eyebrow">BUILT TO BE REPRODUCED</div><h1>A fair comparison.</h1><p class="hero-description">One baseline. Three reduced representations. The same evaluation.</p></div><a class="button button-outline" href="../docs/report.html">Read the full report ↗</a></div>
+        <div class="method-grid"><article class="panel method-story"><div class="eyebrow">RESEARCH QUESTION</div><h2>How does k-NN accuracy change when principal components replace original features?</h2><p>We compare k-nearest neighbours using all 13 standardised chemical features against the same classifier using 2, 5, or 10 principal components. This directly follows the project proposal.</p><div class="pipeline"><div><span>01</span><strong>Split</strong><small>Stratified, 5 folds</small></div><b aria-hidden="true">→</b><div><span>02</span><strong>Standardise</strong><small>Training fold only</small></div><b aria-hidden="true">→</b><div><span>03</span><strong>PCA</strong><small>2, 5, or 10 PCs</small></div><b aria-hidden="true">→</b><div><span>04</span><strong>Classify</strong><small>k-NN, k = 5</small></div></div><h3>Preprocessing stays inside the fold</h3><p>A scikit-learn pipeline fits the scaler and PCA only on each training fold. The held-out samples use those fitted transformations. The baseline omits PCA and otherwise uses identical settings and splits.</p><h3>The reference result is fixed in advance</h3><p>The main comparison fixes k = 5. The neighbour selector on the overview explores sensitivity; it does not tune a model or alter the reference table. Confusion matrices always use the reference experiment.</p><h3>Tuning gets its own evaluation</h3><p>A separate nested cross-validation extension chooses k inside each outer training fold, then evaluates it on the untouched outer fold. Its results below are distinct from the exploratory sensitivity sweep.</p></article><aside class="panel method-details"><div class="eyebrow">EXPERIMENT SETTINGS</div><dl id="method-settings"></dl><a class="text-link" href="../results/analysis.json" download>Download complete analysis JSON ↓</a><hr><div class="eyebrow">DATA PROVENANCE</div><p>The <a href="https://archive.ics.uci.edu/dataset/109/wine" target="_blank" rel="noreferrer">UCI Wine dataset ↗</a> contains chemical measurements of wines derived from three cultivars grown in the same region of Italy.</p><p>Loaded from scikit-learn's bundled copy. No account, network request, or external service is needed to explore this dashboard.</p><p class="chart-note">Dataset: CC BY 4.0. See <a href="../data/README.md">data attribution and provenance</a>.</p></aside></div>
+        <article class="panel"><div class="panel-heading"><div><div class="eyebrow">TUNING, EVALUATED SEPARATELY</div><h3>Nested cross-validation</h3></div><span class="mini-badge">Extension</span></div><p class="muted" id="nested-description"></p><div class="table-scroll" tabindex="0" role="region" aria-label="Nested cross-validation results"><table><caption class="sr-only">Nested cross-validation results</caption><thead><tr><th>Representation</th><th>Outer mean accuracy</th><th>Outer fold SD</th><th>Selected k by fold</th></tr></thead><tbody id="nested-body"></tbody></table></div></article>
+        <div class="research-note"><div class="note-icon" aria-hidden="true">i</div><div><strong>Interpretation has limits.</strong><p>Fold scores share overlapping training data and are not independent replications. A higher cross-validation mean on this small dataset does not establish superiority, causality, or performance on wines from other populations.</p></div></div>
+      </section>
+    </div>
+  </main>
+  <footer><span class="footer-brand">wine / in perspective</span><span>Pranav · Viren · William</span><span>A study in dimensionality reduction <span aria-hidden="true">✧</span></span></footer>
+  <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+  <script src="app.js" defer></script>
+</body>
+</html>

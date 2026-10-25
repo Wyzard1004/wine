@@ -1,0 +1,13 @@
+{
+  "name": "wine-in-perspective",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Optional browser checks for the static Wine research dashboard",
+  "scripts": {
+    "test:dashboard": "node scripts/test-dashboard.cjs",
+    "report:pdf": "node scripts/export-report.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.61.1"
+  }
+}

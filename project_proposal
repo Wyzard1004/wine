@@ -1,0 +1,19 @@
+Question: How does classification accuracy change when k-nearest neighbours (k-NN) uses principal components instead of all the original features to classify wine varieties?
+
+Public Dataset: UCI Wine Dataset. It contains 178 wine samples, 13 chemical features, and 3 wine classes
+Dataset Licence: Creative Commons 4.0
+
+https://archive.ics.uci.edu/dataset/109/wine
+
+Method we are going to use: We will standardise the chemical features and apply Principal Component Analysis (PCA) to reduce the number of dimensions. We will then use k-nearest neighbours (k-NN) to classify the wine varieties using different numbers of principal components. We will compare these results against k-NN using all 13 original features, keeping the data splits and other model settings consistent
+
+Course module: Module 2: Statistical Learning and Optimization; Module 4: Model Validation; Module 9: Unsupervised Learning (PCA)
+
+Baseline and Result would look like: Our baseline will be k-NN using all 13 standardised features. We will compare its classification accuracy against models using 2, 5, and 10 principal components. We will use stratified cross-validation to evaluate performance and report mean accuracy and variability across folds. We expect that PCA may reduce the number of features while maintaining reasonable accuracy, although reducing the dimensions too much may decrease performance. Results will be presented in a table and a graph showing accuracy against the number of principal components
+
+Group members and division of work:
+Pranav: Dataset exploration, data preprocessing, feature standardisation, and PCA implementation
+
+Viren: Implementation of k-NN models, selection of the number of neighbours, and cross-validation experiments
+
+William: Evaluation of results, creation of graphs and tables, interpretation of findings, and coordination of the final report
