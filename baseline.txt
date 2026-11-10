@@ -1,0 +1,30 @@
+# PCA and k-NN for wine cultivar classification
+
+## Group
+William, Pranav, Viren; Open Team 20
+
+## Changes since the proposal
+We incorporated the proposal feedback and sharpened the question: how does cross-validated k-NN error change with PCA dimension r=1–13 when k is tuned separately at each r, and does any r beat all 13 features by more than its error bar? We expanded beyond 2, 5 and 10 components and added repeated, matched validation.
+
+## Data
+UCI Wine: https://archive.ics.uci.edu/dataset/109/wine
+Loaded through scikit-learn: N=178, 13 chemical inputs, three cultivar classes (59, 71, 48 samples). No rows dropped; no missing values or duplicate feature rows. Sample IDs and targets are excluded from inputs.
+
+## Split
+Ten repeats of stratified five-fold outer CV, seed 42; five-fold stratified inner CV, seeds 43–92. All representations share outer and inner splits. Outer validation samples stay outside all scaling, PCA, classifier fits and neighbour selection until prediction. Each sample receives one held-out prediction per repeat. This dataset was previously explored; no untouched external test set exists. No seeds were selected by observed performance.
+
+## Baseline
+StandardScaler followed by uniform-weight, Euclidean k-NN on all 13 inputs. Inner CV maximises mean accuracy over odd k=1–25; ties select the smallest k. The selected pipeline is refitted on each outer training set. Neighbours vary across 50 outer fits; modal k=23 occurs 8/50 times.
+
+## Result
+Pool 178 held-out predictions within each repeat, then average the ten accuracies. Mean repeat accuracy: 96.35%; error: 3.65%. Repeat sample SD: 1.03 percentage points (pp); Monte Carlo SE: 0.33 pp (SD/√10) for the partition mean. These quantify partition sensitivity conditional on these wines, not population uncertainty. baseline.png shows accuracy ±1 repeat SD with a baseline band, and paired error reductions below. r=6/7 have the lowest observed error, 2.92%; their paired mean error reduction is 0.73 pp (paired SD 1.45 pp), without establishing superiority. r=13 reproduces the baseline.
+
+## Issues found
+One wine changes a repeat's accuracy by 0.56 pp. Outer folds overlap in training data; the 1,780 held-out predictions reuse the same 178 wines. The small, previously explored sample limits generalisation claims. Scaling, PCA and k selection remain inside training folds to prevent leakage.
+
+## Next steps
+By Monday 16 November, William, Pranav and Viren will jointly audit leakage and the paired r=1–13 results, review the graphs, select a larger, higher-dimensional second UCI classification dataset, and finalise the early paper draft. The second dataset has not yet been acquired.
+
+## Code
+https://github.com/Wyzard1004/wine
+Checkpoint generator: scripts/build_baseline.py; reproduce the figure with python3 scripts/build_baseline.py.
